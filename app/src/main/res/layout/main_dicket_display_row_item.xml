@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <variable
+            name="ticketDisplay" type="com.mattg.viewmodelexample.database.entities.TicketDisplay"/>
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cl_row"
+        android:layout_width="match_parent"
+        android:layout_height="75dp"
+        android:background="@drawable/row_background"
+        android:paddingBottom="5dp">
+
+        <TextView
+            android:id="@+id/tv_displayTicketNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp"
+            android:background="@drawable/row_background"
+            android:padding="4dp"
+            android:text="@{ticketDisplay.orderId}"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_displayName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:padding="4dp"
+            android:text="@{ticketDisplay.clientName}"
+            app:layout_constraintStart_toEndOf="@+id/tv_displayTicketNumber"
+            app:layout_constraintTop_toTopOf="@+id/tv_displayTicketNumber" />
+
+        <TextView
+            android:id="@+id/tv_displayServer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="24dp"
+            android:padding="4dp"
+            android:text="@{ticketDisplay.employeeName}"
+            app:layout_constraintStart_toEndOf="@+id/tv_displayName"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_displayDue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:padding="4dp"
+            android:text="@{ticketDisplay.orderDueString()}"
+            android:textSize="18dp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@+id/tv_displayServer"
+            app:layout_constraintTop_toTopOf="@+id/tv_displayServer" />
+
+        <TextView
+            android:id="@+id/tv_displayStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="2dp"
+            android:padding="4dp"
+            android:text="@{ticketDisplay.status}"
+            app:layout_constraintStart_toEndOf="@+id/tv_displayDue"
+            app:layout_constraintTop_toTopOf="@+id/tv_displayDue" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

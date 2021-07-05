@@ -1,0 +1,119 @@
+plugins {
+    id 'com.android.application'
+  //  id 'dagger.hilt.android.plugin'
+}
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion "30.0.3"
+
+    packagingOptions {
+        exclude 'META-INF/proguard/androidx-annotations.pro'
+    }
+    defaultConfig {
+        applicationId "com.mattg.viewmodelexample"
+        minSdkVersion 22
+        targetSdkVersion 30
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    //To enable view binding
+    buildFeatures {
+        viewBinding true
+        dataBinding {
+            enabled = true
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+
+    implementation 'com.github.bumptech.glide:glide:4.11.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    // Glide v4 uses this new annotation processor -- see https://bumptech.github.io/glide/doc/generatedapi.html
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
+    def fragment_version = "1.3.4"
+
+    // Java language implementation
+    implementation "androidx.fragment:fragment:$fragment_version"
+
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'com.google.android.material:material:1.3.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    testImplementation 'junit:junit:4.+'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    //hilt/dagger dependencies
+    implementation "com.google.dagger:hilt-android:$hilt_version"
+    annotationProcessor 'androidx.hilt:hilt-compiler:1.0.0-beta01'
+    //lombok
+    compileOnly 'org.projectlombok:lombok:1.18.20'
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
+   //   implementation "com.google.dagger:hilt-compiler:$hilt_version"
+//    implementation 'androidx.hilt:hilt-work:1.0.0-beta01'
+
+
+    // https://developer.android.com/topic/libraries/architecture/adding-components.html
+
+    //NETWORKING
+
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation("com.squareup.okhttp3:okhttp:4.9.0")
+    implementation 'com.squareup.retrofit2:converter-scalars:2.9.0'
+    // gson
+    implementation 'com.google.code.gson:gson:2.8.6'
+    // ViewModel and LiveData
+    implementation "android.arch.lifecycle:extensions:1.1.1"
+    // alternatively, just ViewModel
+    implementation "android.arch.lifecycle:viewmodel:1.1.1"
+    // alternatively, just LiveData
+    implementation "android.arch.lifecycle:livedata:1.1.1"
+
+   // annotationProcessor "android.arch.lifecycle:compiler:1.1.1"
+
+   // Room (use 1.1.0-alpha3 for latest alpha)
+    implementation "android.arch.persistence.room:runtime:1.1.1"
+    annotationProcessor "android.arch.persistence.room:compiler:1.1.1"
+
+    // Paging
+    implementation "android.arch.paging:runtime:1.0.1"
+
+// Test helpers for LiveData
+    testImplementation "android.arch.core:core-testing:1.1.1"
+
+// Test helpers for Room
+    testImplementation "android.arch.persistence.room:testing:1.1.1"
+
+// Adds optional support for Room RxJava and LiveData ReactiveStreams.
+    dependencies {
+        // RxJava support for Room (use 1.1.0-alpha3 for latest alpha)
+        implementation "android.arch.persistence.room:rxjava2:1.1.1"
+
+        // ReactiveStreams support for LiveData
+        implementation "android.arch.lifecycle:reactivestreams:1.1.1"
+    }
+// Adds support for Guava's Optional and ListenableFuture types in Room @Dao queries.
+    dependencies {
+        // Guava support for Room
+        implementation "android.arch.persistence.room:guava:1.1.1"
+    }
+// Alternative import for lightweight Lifecycles only
+//    dependencies {
+//        // Lifecycles only (no ViewModel or LiveData)
+//        implementation "android.arch.lifecycle:runtime:1.1.1"
+//        annotationProcessor "android.arch.lifecycle:compiler:1.1.0"
+//    }
+}
