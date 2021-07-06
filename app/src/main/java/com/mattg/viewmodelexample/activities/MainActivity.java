@@ -126,8 +126,6 @@ public class MainActivity extends AppCompatActivity {
                    //set the order id text
                    binding.tvUniqueId.setText(binding.tvUniqueId.getText().toString() + " " + order.getUniqueId());
                }
-              // viewModel.setCurrentTicket(order);
-
            }
        });
        viewModel.dbMenu.observe(this, menu -> {
@@ -168,7 +166,6 @@ public class MainActivity extends AppCompatActivity {
        });
 
     }
-
     /**
      * Initialize all views here to make on create easy to read/follow.  Click listeners and their
      * functionality are also declared here.
