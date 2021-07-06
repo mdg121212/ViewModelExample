@@ -52,8 +52,7 @@ public class DisplayTicketsAdapter extends RecyclerView.Adapter<DisplayTicketVie
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         MainDicketDisplayRowItemBinding binding = MainDicketDisplayRowItemBinding.inflate(inflater,
                  parent, false);
-//        View view = LayoutInflater.from(parent.getContext())
-//                .inflate(R.layout.menu_layout_item, parent, false);
+
         return new DisplayTicketViewHolder(binding, clicker);
     }
 

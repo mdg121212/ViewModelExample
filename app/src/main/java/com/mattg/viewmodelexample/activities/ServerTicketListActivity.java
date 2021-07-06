@@ -82,6 +82,9 @@ public class ServerTicketListActivity extends AppCompatActivity {
             Log.d(TAG, "observeViewModel: observing ticketsList");
             if(data != null){
                 Log.d(TAG, "observeViewModel: ticket list not null, is " + data);
+                for(TicketDisplay dis : data){
+                    Log.d(TAG, "observeViewModel: ticket is " + dis.toString());
+                }
                 adapter.setTicketList(data);
             }
         });

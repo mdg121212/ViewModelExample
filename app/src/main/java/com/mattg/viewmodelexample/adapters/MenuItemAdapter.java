@@ -31,6 +31,7 @@ public class MenuItemAdapter extends RecyclerView.Adapter<MenuViewHolder> {
     public List<MenuItem> menuItemList;
     private MainActivity.recyclerClickCallback clicker;
     private boolean isTicket;
+
     public MenuItemAdapter(List<MenuItem> menu, MainActivity.recyclerClickCallback callback, boolean isTicket){
         this.menuItemList = menu;
         this.clicker = callback;
@@ -70,9 +71,7 @@ public class MenuItemAdapter extends RecyclerView.Adapter<MenuViewHolder> {
 
     @Override
     public int getItemCount() {
-        if(this.menuItemList.size() > 0) {
-            return this.menuItemList.size();
-        } else return 0;
+      return this.menuItemList.size();
     }
 
     public void updateData(ArrayList<MenuItem> newItems) {

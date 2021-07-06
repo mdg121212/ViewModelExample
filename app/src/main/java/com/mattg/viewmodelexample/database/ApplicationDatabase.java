@@ -27,7 +27,7 @@ import com.mattg.viewmodelexample.models.MenuItem;
  * main thread, this is not recommended and causes performance issues.
  */
 @Database(entities = { Ticket.class, Menu.class, MenuItem.class,
-                      Client.class, Modifier.class, GiftCard.class, TicketDisplay.class}, version = 2, exportSchema = false)
+                      Client.class, Modifier.class, GiftCard.class, TicketDisplay.class}, version = 4, exportSchema = false)
 @TypeConverters(AppTypeConverters.class)
 public abstract class ApplicationDatabase extends RoomDatabase {
 

@@ -18,7 +18,7 @@ import java.util.List;
 public interface TicketDisplayDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    public long insertTicketDisplay(TicketDisplay ticketDisplay);
+    long insertTicketDisplay(TicketDisplay ticketDisplay);
 
     @Update
     public void updateTicketDisplay(TicketDisplay ticketDisplay);

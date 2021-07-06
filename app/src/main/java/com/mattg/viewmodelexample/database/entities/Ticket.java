@@ -3,6 +3,7 @@ package com.mattg.viewmodelexample.database.entities;
 import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
@@ -24,7 +25,7 @@ import lombok.ToString;
  * that contains only enough information to display on that view.
  * 6-21 |-(MG)-|  --
  */
-@Entity(tableName = "tickets_table")
+@Entity(tableName = "tickets_table",  indices = {@Index(value = {"orderId"}, unique = true)})
 @Getter
 @Setter
 @NoArgsConstructor

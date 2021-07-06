@@ -6,13 +6,17 @@ import android.util.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.mattg.viewmodelexample.database.daos.TicketDisplayDao;
 import com.mattg.viewmodelexample.database.entities.Menu;
 import com.mattg.viewmodelexample.database.daos.MenuDao;
 import com.mattg.viewmodelexample.database.entities.Ticket;
 import com.mattg.viewmodelexample.database.daos.TicketDao;
 import com.mattg.viewmodelexample.database.ApplicationDatabase;
+import com.mattg.viewmodelexample.database.entities.TicketDisplay;
 import com.mattg.viewmodelexample.models.MenuItem;
 import com.mattg.viewmodelexample.viewModels.MainViewModel;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +39,7 @@ public class RoomRepo {
     private ApplicationDatabase db;
     private TicketDao ticketDao;
     private MenuDao menuDao;
+    private TicketDisplayDao displayDao;
 
     private ExecutorService threadPool = Executors.newCachedThreadPool();
     private String TAG = "ROOMRepo:::: ";
@@ -51,6 +56,7 @@ public class RoomRepo {
         ticketDao = db.orderDao();
         menuDao = db.menuDao();
         menusForUi = menuDao.getMenuLiveDataTest();
+        displayDao = db.ticketDisplayDao();
     }
 
     /**
@@ -120,15 +126,66 @@ public class RoomRepo {
     }
     //METHODS FOR DATABASE OPERATIONS (THESE SHOULD BE DONE ON NON-MAIN THREAD)
     //TODO add specific executor/thread pool?
+
+    //TICKET OPTIONS
+    private MutableLiveData<Ticket> currentTicket = new MutableLiveData<>();
+
+    public LiveData<Ticket> getCurrentTicket(){
+        if(currentTicket == null){
+            currentTicket = new MutableLiveData<>();
+        }
+        Log.d(TAG, "getCurrentTicket: CALLED, RETURNING " + currentTicket.getValue());
+        return currentTicket;
+    }
+    /**
+     * Inserts a {@link Ticket} into both database tables
+     * @param ticket
+     */
     public void insertOrder(Ticket ticket) {
-        new Thread(() -> ticketDao.insertOrder(ticket)).start();
+        TicketDisplay displayVersion = generateDisplayVariant(ticket);
+        new Thread(() -> {
+            ticketDao.insertOrder(ticket);
+            displayDao.insertTicketDisplay(displayVersion);
+        }).start();
     }
+
+
+    /**
+     * Delete a ticket from both database tables
+     * @param ticket {@link Ticket} to delete
+     */
     public void deleteOrder(Ticket ticket) {
-        new Thread(() -> ticketDao.deleteOrder(ticket)).start();
+        TicketDisplay displayVersion = generateDisplayVariant(ticket);
+        new Thread(() -> {
+            ticketDao.deleteOrder(ticket);
+            displayDao.deleteTicketDisplay(displayVersion);
+        }).start();
     }
+
+    /**
+     * Creates a variant for display on first screen
+     * @param ticket Ticket to create display version of
+     * @return {@link TicketDisplay}
+     */
+    private TicketDisplay generateDisplayVariant(Ticket ticket) {
+        TicketDisplay toSave = new TicketDisplay();
+        toSave.setStatus(ticket.getStatus());
+        toSave.setOrderTotal(ticket.getDue());
+        toSave.setOrderId(ticket.getOrderId());
+//        toSave.setClientName(ticket.getClient().getFirstName());
+        toSave.setEmployeeId(ticket.getEmployeeId());
+   //     toSave.setEmployeeName(ticket.getEmployeeId());
+        return toSave;
+    }
+
     public void updateOrder(Ticket ticket) {
-        Log.d(TAG, "updateOrder: called, with ticket " + ticket);
-        new Thread(() -> ticketDao.updateOrder(ticket)).start();
+
+        TicketDisplay displayVersion = generateDisplayVariant(ticket);
+        Log.d(TAG, "updateOrder: called, with ticket " + ticket + " and " + displayVersion.toString());
+        new Thread(() -> {
+            ticketDao.updateOrder(ticket);
+            displayDao.insertTicketDisplay(displayVersion);
+        }).start();
     }
 
     /**
@@ -155,6 +212,14 @@ public class RoomRepo {
             List<Ticket> tickets = ticketDao.getTicketsByIDAsc();
             ordersList.postValue(tickets);
         }).start();
+    }
+
+    /**
+     * Updates the above data
+     * @param ticket
+     */
+    public void updateRetrievedOrder(Ticket ticket){
+        retrievedOrder.postValue(ticket);
     }
 
     /**
@@ -299,11 +364,5 @@ public class RoomRepo {
 
         });
     }
-
-
-
-
-
-
 
 }

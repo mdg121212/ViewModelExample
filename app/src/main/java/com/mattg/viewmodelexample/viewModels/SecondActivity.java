@@ -43,7 +43,7 @@ public class SecondActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
         currentTicket = (Ticket) getIntent().getExtras().get("ticket");
-        viewModel.setCurrentTicket(currentTicket);
+      //  viewModel.setCurrentTicket(currentTicket);
 
         initViews();
         observeViewModel();

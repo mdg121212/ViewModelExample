@@ -4,10 +4,12 @@ import android.app.Application;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.mattg.viewmodelexample.database.TicketStatus;
 import com.mattg.viewmodelexample.database.entities.Client;
 import com.mattg.viewmodelexample.database.entities.Menu;
 import com.mattg.viewmodelexample.database.entities.Ticket;
@@ -21,6 +23,8 @@ import com.mattg.viewmodelexample.repositories.RoomRepo;
 import com.mattg.viewmodelexample.repositories.TicketDisplayRepo;
 import com.mattg.viewmodelexample.repositories.TicketRepoLocal;
 import com.mattg.viewmodelexample.repositories.TicketRepoNetwork;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,6 +45,26 @@ public class MainViewModel extends AndroidViewModel {
     private ClientLocalRepo clientLocalRepo = new ClientLocalRepo(getApplication());
     private TicketDisplayRepo ticketDisplayRepo = new TicketDisplayRepo(getApplication());
     private static ArrayList<MenuItem> ticketItems;
+
+    /**
+     * Updates the current values in all scopes
+     */
+    public void updateCurrentTicketValues() {
+        Ticket current = currentTicket.getValue();
+        if(current != null) {
+            current.setSubTotal(currentSubTotal.getValue());
+            current.setDiscounts(getCurrentDiscounts().getValue());
+            current.setTotal(total.getValue());
+            current.setItems(currentItems.getValue());
+            if(discounts.getValue() == null){
+                current.setDue(currentSubTotal.getValue());
+            } else
+            current.setDue(currentSubTotal.getValue() + discounts.getValue());
+            roomRepo.updateOrder(current);
+        }
+
+    }
+
     /**
      * Public constructor that passes in Application context
      * @param application {@link Application}
@@ -52,10 +76,6 @@ public class MainViewModel extends AndroidViewModel {
     //reduce the amount of live data objects to manage.
    private MutableLiveData<String> counter = new MutableLiveData<>();
     //public MutableLiveData<ArrayList<MenuItem>> apiMenu = menuRepo.getMenuLiveData();
-    /**
-     * This will get the database value initially, and update the ui with any changes
-     */
-
     /**
      * Getting observable live data from Room -> Repo -> Here
      */
@@ -128,6 +148,7 @@ public class MainViewModel extends AndroidViewModel {
         }
         sub += amount;
         currentSubTotal.postValue(sub);
+        //adjust ticket
         adjustTotal(sub);
     }
 
@@ -170,13 +191,6 @@ public class MainViewModel extends AndroidViewModel {
         return counter.getValue();
     }
 
-    private MutableLiveData<Ticket> currentTicket = new MutableLiveData<Ticket>();
-    public MutableLiveData<Ticket> getCurrentTicket() {
-        if (currentTicket == null) {
-            currentTicket = new MutableLiveData<Ticket>();
-        }
-        return currentTicket;
-    }
     private MutableLiveData<Client> currentClient = new MutableLiveData<Client>();
     public MutableLiveData<Client> getCurrentClient() {
         if(currentClient == null) {
@@ -274,13 +288,13 @@ public class MainViewModel extends AndroidViewModel {
             currentSubTotal.setValue(0.0);
         }
         Double currentSub = currentSubTotal.getValue();
-
         if(add) {
             currentSub += update;
         } else {
             currentSub -= update;
         }
         currentSubTotal.postValue(currentSub);
+        updateCurrentTicketValues();
     }
 
 
@@ -301,13 +315,6 @@ public class MainViewModel extends AndroidViewModel {
         return currentSubTotal.getValue();
     }
 
-//    public Double increaseSubtotal(Double additionTo) {
-//        Double subTotal = getCurrentSubTotal().getValue();
-//        subTotal += additionTo;
-//
-//        return subTotal;
-//    }
-
     private List<MenuItem> getItems(){
         return currentItems.getValue();
     }
@@ -316,50 +323,10 @@ public class MainViewModel extends AndroidViewModel {
         currentItems.postValue(newItems);
     }
 
-    public void setCurrentTicket(Ticket ticketToSet){
-        currentTicket.postValue(ticketToSet);
-    }
-    public void setCurrentClient(Client client) { currentClient.postValue(client); }
-//    public void setCurrentMenu(List<MenuItem> menuUpdate) { menu.postValue(menuUpdate);}
-
     /**
-     * Sets posts value to live data object
-     * @param newItems items that will be added to current list, then updated
-     * list will be posted to live data.
+     * Add a menu item to the current list
+     * @param newItem
      */
-    public void updateTicketItems (List<MenuItem> newItems) {
-        Ticket ticketToUpdate = getCurrentTicket().getValue();
-        if(ticketToUpdate != null){
-            ticketToUpdate.updateItemsList(newItems);
-        }
-        setCurrentTicket(ticketToUpdate);
-    }
-//    /**
-//     * Gets the current tickets value
-//     * @return List<Object> value of the currentTicket.getValue().getItems()
-//     */
-//    private List<Object> getCurrentItemsForBackend() {
-//        return Collections.singletonList(getCurrentItems().getValue());
-//    }
-//    /**
-//     * Creates a ticket with the provided names, and gets the current value of live data objects
-//     * to create the other ticket values (list of items, subtotal, etc)
-//     * @param firstName
-//     * @param lastName
-//     */
-//    public void createTicket(String firstName, String lastName) {
-//        Ticket newTicket = new Ticket();
-//        newTicket.setFirstName(firstName);
-//        newTicket.setLastName(lastName);
-//        newTicket.setOrderId(getCounter());
-//        newTicket.setUniqueId(getCounter() + 100);
-//        newTicket.setSubTotal(getSubtotal());
-//        newTicket.setItems(getItems());
-//        newTicket.setCreatedAt(String.valueOf(new Date()));
-//        setCurrentTicket(newTicket);
-//        ticketRepoNetwork.addTicketToDataBase(newTicket);
-//    }
-
     public void addItemToList(MenuItem newItem) {
         if(currentItems.getValue() != null) {
             if(!currentItems.getValue().contains(newItem)){
@@ -412,6 +379,58 @@ public class MainViewModel extends AndroidViewModel {
     public void updateDiscount(Double amount) {
         discounts.postValue(amount);
     }
+    private MutableLiveData<Ticket> currentTicket = new MutableLiveData<Ticket>();
+    public MutableLiveData<Ticket> getCurrentTicket() {
+        if (currentTicket == null) {
+            currentTicket = new MutableLiveData<Ticket>();
+        }
+        return currentTicket;
+    }
+
+    /**
+     * Sets posts value to live data object
+     * @param newItems items that will be added to current list, then updated
+     * list will be posted to live data.
+     */
+    public void updateTicketItems (List<MenuItem> newItems) {
+        Ticket ticketToUpdate = getCurrentTicket().getValue();
+        if(ticketToUpdate != null){
+            ticketToUpdate.updateItemsList(newItems);
+        }
+        currentTicket.postValue(ticketToUpdate);
+        currentItems.postValue((ArrayList<MenuItem>) newItems);
+        updateCurrentTicketValues();
+    }
+
+    /**
+     * Creates a ticket to save, if the order id is passed as null it will use the
+     * retrieved tickets order id.
+     * @param orderId @Nullable if ticket is new, pass order id
+     * @return {@link Ticket}
+     */
+    public Ticket createTicket(@Nullable String orderId, @Nullable String unique) {
+        Ticket ticket = new Ticket();
+        ticket.setStatus(TicketStatus.OPEN.label);
+        ticket.setDue(currentSubTotal.getValue());
+        ticket.setSubTotal(currentSubTotal.getValue());
+        ticket.setTotal(currentSubTotal.getValue());
+
+        if(orderId == null && orderSearchedById.getValue() != null) {
+            ticket.setOrderId(orderSearchedById.getValue().getOrderId());
+            ticket.setUniqueId(orderSearchedById.getValue().getUniqueId());
+        } else {
+            ticket.setOrderId(orderId);
+        }
+        ticket.setItems(currentItems.getValue());
+        if(discounts != null){
+            ticket.setDiscounts(discounts.getValue());
+        }
+        if(currentClient.getValue() != null){
+            ticket.setClient(currentClient.getValue());
+        }
+        return ticket;
+    }
+
     /**
      * Uses the repository instance to save an order on a separate thread to
      * both the complete ticket repository and the variant for display only.  This
@@ -419,25 +438,15 @@ public class MainViewModel extends AndroidViewModel {
      */
     public void saveOrderToDb(Ticket ticket){
         Log.d(TAG, "saveOrderToDb: saving ticket: " + ticket.toString());
-        TicketDisplay displayVersionToSave = new TicketDisplay();
-        displayVersionToSave.setOrderDue(ticket.getDue());
-        displayVersionToSave.setEmployeeName(ticket.getFirstName() + " " + ticket.getLastName());
-        displayVersionToSave.setOrderId(ticket.getOrderId());
-        displayVersionToSave.setStatus(ticket.getStatus());
-        displayVersionToSave.setOrderTotal(ticket.getTotal());
-        displayVersionToSave.setEmployeeId(ticket.getEmployeeId());
-        ticketDisplayRepo.insertTicketDisplay(displayVersionToSave);
         roomRepo.insertOrder(ticket);
     }
 
-    /**
-     * Gets all relevant "new" data (list of items, totals, etc.) and uses the {@link RoomRepo}
-     * to update the database table on a background thread.
-     * @param value
-     */
-    public void updateCurrentTicketInDbPrivate(Ticket value) {
-
+    public void saveOrderToDb(){
+        Ticket ticket = currentTicket.getValue();
+        Log.d(TAG, "saveOrderToDb: saving existing ticket : " + ticket);
+        roomRepo.insertOrder(ticket);
     }
+
     //TODO which variant works best, everything live data, and then grab that value when needed for
     // modificaiton? or return an object directly (might need async task implementation
     // and that is depracated)///
@@ -458,23 +467,22 @@ public class MainViewModel extends AndroidViewModel {
      * not returning when and in the order we expect/assume them to
      */
     public LiveData<Ticket> orderSearchedById = roomRepo.getRetrievedOrder();
-    public void setCurrentTicketValues() {
-        if(orderSearchedById.getValue() != null) {
-            //order was found, set values with it
-            currentSubTotal.postValue(orderSearchedById.getValue().getSubTotal());
+
+    /**
+     * Since the above data is straight through from db to ui, then this method is exposed to update
+     * that value for the local variable that will be modified then saved again
+     */
+    public void setCurrentTicketFromDb(){
+        if(orderSearchedById.getValue() != null){
+            Log.d(TAG, "setCurrentTicketFromDb: posting value " + orderSearchedById.getValue().toString());
+           currentTicket.postValue(orderSearchedById.getValue());
+           currentSubTotal.postValue(orderSearchedById.getValue().getSubTotal());
+           currentItems.postValue((ArrayList<MenuItem>) orderSearchedById.getValue().getItems());
+           if(orderSearchedById.getValue().getDiscounts() != null) {
+               discounts.postValue(orderSearchedById.getValue().getDiscounts());
+           }
         }
     }
-    public void updateCurrentTicketInDatabase() {
-        Ticket ticketToUpdate = orderSearchedById.getValue();
-        Log.d(TAG, "updateCurrentTicketInDatabase: current ticket to update is " + ticketToUpdate.toString());
-        ticketToUpdate.setDue(getCurrentTotal().getValue());
-        ticketToUpdate.setItems(currentItems.getValue());
-        ticketToUpdate.setDiscounts(getCurrentDiscounts().getValue());
-        ticketToUpdate.setSubTotal(getSubtotal());
-        Log.d(TAG, "updateCurrentTicketInDatabase: current ticket is now " + ticketToUpdate.toString());
-        roomRepo.updateOrder(ticketToUpdate);
-    }
-
     /**
      * Clears the full tickets table from db
      */
@@ -483,6 +491,12 @@ public class MainViewModel extends AndroidViewModel {
         roomRepo.deleteAllOrders();
         ticketDisplayRepo.nukeDisplayTickets();
     }
+
+    /**
+     * Posts ticket value to both live data values
+     * @param updateTicket
+     */
+
 }
 
 

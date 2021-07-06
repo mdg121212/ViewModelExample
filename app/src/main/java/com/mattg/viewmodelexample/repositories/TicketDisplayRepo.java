@@ -46,6 +46,7 @@ public class TicketDisplayRepo {
     public void updateTicketDisplay(TicketDisplay ticketDisplay) {
         new Thread(() -> { ticketDisplayDao.updateTicketDisplay(ticketDisplay);}).start();
     }
+
     public LiveData<List<TicketDisplay>> getAllTicketsLiveData(){
         return ticketDisplayDao.getAllTicketsDisplay();
     }

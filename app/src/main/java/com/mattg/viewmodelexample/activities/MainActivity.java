@@ -26,6 +26,7 @@ import com.mattg.viewmodelexample.database.entities.Ticket;
 import com.mattg.viewmodelexample.databinding.ActivityMainBinding;
 import com.mattg.viewmodelexample.dependencies.Utilities;
 import com.mattg.viewmodelexample.models.MenuItem;
+import com.mattg.viewmodelexample.utils.Utils;
 import com.mattg.viewmodelexample.viewModels.MainViewModel;
 import com.mattg.viewmodelexample.viewModels.SecondActivity;
 
@@ -37,28 +38,19 @@ import java.util.Random;
 /**
  * @AndroidEntryPoint generates an individual Hilt component for each Android class in your project.
  * These components can receive dependencies from their respective parent classes.
- *
- * variables --> camelCase
+ * variables --> camelCase  6-21 [MG]
  */
-
 public class MainActivity extends AppCompatActivity {
-
+    private final String TAG = "::MAINACTIVITY::";
     //create a binding variable
     ActivityMainBinding binding;
     TotalsFragment currentFragment;
-
-    private String TAG = "::MAINACTIVITY::";
-    Utilities utils;
-    RecyclerView menuItemsRecycler;
-    RecyclerView ticketItemsRecycler;
     MenuItemAdapter menuAdapter;
     MenuItemAdapter ticketAdapter;
     MainViewModel viewModel;
     String intentOrderId;
     Integer id;
     String uniqueId;
-    ArrayList<Double> subs;
-    ArrayList<String> names;
     private Boolean isOrderSent = false;
     Ticket currentTicket;
     recyclerClickCallback callback;
@@ -77,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
         //create instance of view model
         viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
         Random orderId = new Random(22);
-
         id = Integer.getInteger(String.valueOf(orderId.nextInt()));
         uniqueId = String.valueOf(orderId.nextInt() + 200);
         String orderIdGenerated = String.valueOf(orderId.nextInt() + 100);
@@ -108,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
         viewModel.loadMenu();
         viewModel.loadClients();
     }
-
     /**
      * If view model values are not null, set text fields with them.
      * If you change a view model value, it will auto update to the text field its observer
@@ -118,17 +108,27 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "OBSERVE DATA CALLED");
        //get order by id value
        viewModel.orderSearchedById.observe(this, order -> {
-           Log.d(TAG, "initViews observeData: observing order ");
-
            if(order != null){
                Log.d(TAG, " 98989 intent order id is : initViews observeData: FOUND ORDER BY SEARCH AT " + System.currentTimeMillis() + " its value:\n" + order.toString());
-               ticketAdapter.updateData((ArrayList) order.getItems());
-               activityItemList = (ArrayList) order.getItems();
                currentOrderId = order.getOrderId();
-               viewModel.setCurrentTicket(order);
+               //since the value was not null, update the viewmodel variable
+               viewModel.setCurrentTicketFromDb();
+               if(order.getItems() != null){
+                   Log.d(TAG, "98989 observeData: order items not null " + order.getItems());
+                   activityItemList = (ArrayList<MenuItem>) order.getItems();
+                   ticketAdapter.updateData(activityItemList);
+               }
+               if(order.getOrderId() != null){
+                   //set the order id text
+                   binding.tvOrderId.setText(binding.tvOrderId.getText().toString() + " " + order.getOrderId());
+               }
+               if(order.getUniqueId() != null){
+                   //set the order id text
+                   binding.tvUniqueId.setText(binding.tvUniqueId.getText().toString() + " " + order.getUniqueId());
+               }
+              // viewModel.setCurrentTicket(order);
+
            }
-       });
-       viewModel.getCurrentTicket().observe(this , ticket -> {
        });
        viewModel.dbMenu.observe(this, menu -> {
            Log.d(TAG, "observeData: menu live data value is: " + menu);
@@ -163,15 +163,10 @@ public class MainActivity extends AppCompatActivity {
        viewModel.getCurrentSubTotal().observe(this, subtotal -> {
            if(subtotal == null){
                viewModel.setCurrentSubTotal(0.00);
-           }  binding.tvSubTotal.setText(String.format(Locale.US, "%.2f" , Double.parseDouble(String.valueOf(subtotal))));
-       });
-
-       viewModel.getCurrentTicket().observe(this, ticket -> {
-           if(ticket != null){
-               Log.d(TAG, "=+=:;:GOT THE TICKET UPDATED VALUE:;:=+=");
-
            }
+          binding.tvSubTotal.setText(Utils.formatDoubleToCurrency(Double.parseDouble(String.valueOf(subtotal))));
        });
+
     }
 
     /**
@@ -191,8 +186,6 @@ public class MainActivity extends AppCompatActivity {
             viewModel.setCounter(randomNum);
         });
         binding.btnNextActivity.setOnClickListener(view -> {
-         //   setTicket();
-        //    currentTicket = viewModel.getCurrentTicket().getValue();
             Intent nextActivityIntent = new Intent(this, SecondActivity.class);
             nextActivityIntent.putExtra("ticket", (Parcelable) currentTicket);
             startActivity(nextActivityIntent);
@@ -200,27 +193,19 @@ public class MainActivity extends AppCompatActivity {
         });
         binding.btnSendOrder.setOnClickListener(view -> {
             isOrderSent = true;
+            Ticket newTicket;
             Log.d(TAG, "initViews: send/save order clicked");
             if(!currentOrderId.isEmpty()) {
+
                 Log.d(TAG, "initViews: currentOrderid was not null updating ticket rather than creating...");
-                viewModel.updateCurrentTicketInDatabase();
+                viewModel.saveOrderToDb(viewModel.createTicket(null, null));
+                // viewModel.saveOrderToDb();
+               // viewModel.getOrderFromDb(newTicket.getOrderId());
             } else {
                 //create an Order object with available data
-                Ticket newTicket = new Ticket(
-                        TicketStatus.OPEN.label,
-                        randomNumber(),
-                        null,
-                        randomNumber(),
-                        null,
-                        Double.parseDouble(binding.tvSubTotal.getText().toString()),
-                        Double.parseDouble(binding.tvSubTotal.getText().toString()),
-                        Double.parseDouble(binding.tvSubTotal.getText().toString()),
-                        viewModel.getCurrentDiscounts().getValue(),
-                        activityItemList);
-
-            viewModel.saveOrderToDb(newTicket);
-            Log.d(TAG, "initViews: send order clicked created order: \n" + newTicket.toString());
-                viewModel.getOrderFromDb(newTicket.getOrderId());
+                viewModel.saveOrderToDb(viewModel.createTicket(randomNumber(), randomNumber()));
+               // viewModel.saveOrderToDb();
+               // viewModel.getOrderFromDb(newTicket.getOrderId());
             }
         });
         callback = (position, item, i) -> {
