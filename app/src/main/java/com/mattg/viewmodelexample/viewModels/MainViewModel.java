@@ -71,6 +71,9 @@ public class MainViewModel extends AndroidViewModel {
      */
    public MainViewModel(@NonNull Application application) {
         super(application);
+        discounts.postValue(0.00);
+        //default tax rate, would be set elsewhere
+        setTax(.03);
     }
     //creating multiple observable data fields.  could combine into more complex objects to
     //reduce the amount of live data objects to manage.
@@ -90,14 +93,6 @@ public class MainViewModel extends AndroidViewModel {
    private MutableLiveData<Double> discountTotal = new MutableLiveData<>();
    private MutableLiveData<Double> tax = new MutableLiveData<>();
 
-    public LiveData<Double> getCurrentSubtotal() {
-        if(subtotal == null) {
-            Log.d(TAG, "current subtotal fetch was null");
-            subtotal = new MutableLiveData<Double>();
-        }
-        Log.d(TAG, "current item subtotal returning " + subtotal.getValue());
-        return subtotal;
-    }
     public LiveData<Double> getCurrentTotal() {
         if(total == null) {
             Log.d(TAG, "current total fetch was null");
@@ -136,44 +131,6 @@ public class MainViewModel extends AndroidViewModel {
         if(tax.getValue() != taxRate) { tax.postValue(taxRate); }
     }
 
-    /**
-     * Adjust the subtotal amount here only.  All observers will be notified
-     * of this change.
-     * @param amount amount to add / subtract from current subtotal
-     */
-    public void adjustSubtotal(Double amount) {
-        Double sub = currentSubTotal.getValue();
-        if(sub == null){
-            sub = 0.0;
-        }
-        sub += amount;
-        currentSubTotal.postValue(sub);
-        //adjust ticket
-        adjustTotal(sub);
-    }
-
-    /**
-     * When the subtotal is changed, this method adjusts the actual total by adding the tax
-     * for demonstration the tax is calculated here, should be done API server side so app does
-     * not need updates to adjust formula / issues.  This method accounts for all current discounts
-     * (more could be added, method split to multiple methods) and amounts that would effect the total.
-     * @param sub subtotal amount
-     */
-    private void adjustTotal(Double sub) {
-        if(tax.getValue() == null){
-            tax.postValue(0.0);
-        }
-        Double taxAjustment = sub * tax.getValue();
-        if(total.getValue() == null) {
-            total.postValue(0.0);
-        }
-        Double newTotal = taxAjustment + total.getValue();
-        if(discountTotal.getValue() == null){
-            discountTotal.postValue(0.0);
-        }
-        newTotal += discountTotal.getValue();
-        total.postValue(newTotal);
-    }
 
     /**
      * Get clients from repository and updates live data.  These live data objects should publish
@@ -271,13 +228,29 @@ public class MainViewModel extends AndroidViewModel {
             }
         }
     }
-//    /**
-//     * Updating the current list of {@link MenuItem}
-//     * @param updatedItems new list
-//     */
-//    public void updateLiveDataList(ArrayList<MenuItem> updatedItems){
-//        currentItems.postValue(updatedItems);
-//    }
+    /**
+     * When the subtotal is changed, this method adjusts the actual total by adding the tax
+     * for demonstration the tax is calculated here, should be done API server side so app does
+     * not need updates to adjust formula / issues.  This method accounts for all current discounts
+     * (more could be added, method split to multiple methods) and amounts that would effect the total.
+     * @param sub subtotal amount
+     */
+    private void adjustTotal(Double sub) {
+        if(tax.getValue() == null){
+            tax.postValue(0.0);
+        }
+        Double taxAjustment = sub * tax.getValue();
+        if(total.getValue() == null) {
+            total.postValue(0.0);
+        }
+        Double newTotal = taxAjustment + total.getValue();
+        if(discountTotal.getValue() == null){
+            discountTotal.postValue(0.0);
+        }
+        newTotal += discountTotal.getValue();
+        total.postValue(newTotal);
+    }
+
     /**
      * Method that will either add or subtract a value to/from subtotal
      * @param update {@link Double} amount to add/subtract
@@ -293,6 +266,8 @@ public class MainViewModel extends AndroidViewModel {
         } else {
             currentSub -= update;
         }
+        //adjust for tax here
+        adjustTotal(currentSub);
         currentSubTotal.postValue(currentSub);
         updateCurrentTicketValues();
     }
@@ -310,19 +285,16 @@ public class MainViewModel extends AndroidViewModel {
     public void setCurrentSubTotal(Double newTotal) {
         currentSubTotal.postValue(newTotal);
     }
-
+    /**
+     * Gets the Double value of the livedata
+     * @return {@link Double} value of current subtotal
+     */
     private Double getSubtotal(){
         return currentSubTotal.getValue();
     }
-
     private List<MenuItem> getItems(){
         return currentItems.getValue();
     }
-    private void setCurrentItems(ArrayList<MenuItem> newItems) {
-        Log.d(TAG, "clicker item count should be increased/decreased, setting new items " + newItems.size());
-        currentItems.postValue(newItems);
-    }
-
     /**
      * Add a menu item to the current list
      * @param newItem
@@ -410,16 +382,23 @@ public class MainViewModel extends AndroidViewModel {
      */
     public Ticket createTicket(@Nullable String orderId, @Nullable String unique) {
         Ticket ticket = new Ticket();
-        ticket.setStatus(TicketStatus.OPEN.label);
-        ticket.setDue(currentSubTotal.getValue());
+        if(orderSearchedById.getValue() != null && orderSearchedById.getValue().getStatus() != null){
+            ticket.setStatus(orderSearchedById.getValue().getStatus());
+        } else {
+            ticket.setStatus(TicketStatus.OPEN.label);
+        }
+        ticket.setDue(total.getValue());
         ticket.setSubTotal(currentSubTotal.getValue());
-        ticket.setTotal(currentSubTotal.getValue());
+        ticket.setTotal(total.getValue());
 
         if(orderId == null && orderSearchedById.getValue() != null) {
+            //null params means we are updating an existing ticket
             ticket.setOrderId(orderSearchedById.getValue().getOrderId());
             ticket.setUniqueId(orderSearchedById.getValue().getUniqueId());
         } else {
+            //since not null, this is a new ticket and will use the params
             ticket.setOrderId(orderId);
+            ticket.setUniqueId(unique);
         }
         ticket.setItems(currentItems.getValue());
         if(discounts != null){
@@ -491,12 +470,6 @@ public class MainViewModel extends AndroidViewModel {
         roomRepo.deleteAllOrders();
         ticketDisplayRepo.nukeDisplayTickets();
     }
-
-    /**
-     * Posts ticket value to both live data values
-     * @param updateTicket
-     */
-
 }
 
 
