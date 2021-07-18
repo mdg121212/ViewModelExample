@@ -170,10 +170,10 @@ public class RoomRepo {
     private TicketDisplay generateDisplayVariant(Ticket ticket) {
         TicketDisplay toSave = new TicketDisplay();
         toSave.setStatus(ticket.getStatus());
-        toSave.setOrderTotal(ticket.getDue());
-        toSave.setOrderId(ticket.getOrderId());
+        if(ticket.getDue() != null) { toSave.setOrderTotal(ticket.getDue()); }
+        if(ticket.getOrderId() != null) { toSave.setOrderId(ticket.getOrderId()); }
 //        toSave.setClientName(ticket.getClient().getFirstName());
-        toSave.setEmployeeId(ticket.getEmployeeId());
+        if(ticket.getEmployeeId() != null) { toSave.setEmployeeId(ticket.getEmployeeId()); }
    //     toSave.setEmployeeName(ticket.getEmployeeId());
         return toSave;
     }

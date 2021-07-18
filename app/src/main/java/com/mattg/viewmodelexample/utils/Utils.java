@@ -2,9 +2,11 @@ package com.mattg.viewmodelexample.utils;
 
 import java.text.DecimalFormat;
 
+import timber.log.Timber;
+
 public class Utils {
 
-    private static DecimalFormat df = new DecimalFormat("#.##");
+    private static DecimalFormat df = new DecimalFormat("#.00");
 
     public static Double defaultCurrencyStringCheck(String input) {
         if(input.isEmpty()){
@@ -19,6 +21,7 @@ public class Utils {
      * @return
      */
     public static String formatDoubleToCurrency(Double amount) {
+
         if(amount == 0.0){ return "$0.00";} else return "$" + df.format(amount);
     }
 }

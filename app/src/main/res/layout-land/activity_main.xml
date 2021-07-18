@@ -41,28 +41,25 @@
             android:id="@+id/tv_orderId"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
+            android:layout_marginTop="8dp"
             android:text="Order Id:"
-            app:layout_constraintEnd_toStartOf="@+id/tv_uniqueId"
             app:layout_constraintStart_toStartOf="@+id/rv_ticket_items"
-            app:layout_constraintTop_toTopOf="@+id/tv_uniqueId" />
+            app:layout_constraintTop_toBottomOf="@+id/rv_ticket_items" />
 
         <TextView
             android:id="@+id/tv_uniqueId"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginTop="8dp"
             android:text="Unique Id:"
-            app:layout_constraintEnd_toStartOf="@+id/tv_subTotal"
-            app:layout_constraintStart_toEndOf="@+id/tv_orderId"
-            app:layout_constraintTop_toTopOf="@+id/tv_subTotal" />
+            app:layout_constraintStart_toStartOf="@+id/tv_orderId"
+            app:layout_constraintTop_toBottomOf="@+id/tv_orderId" />
 
         <TextView
             android:id="@+id/tv_subTotal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             android:text="Sub-Total:"
             app:layout_constraintEnd_toEndOf="@+id/rv_ticket_items"
@@ -82,9 +79,9 @@
             android:id="@+id/btn_getMenuItems"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="50dp"
+            android:layout_marginStart="16dp"
             android:text="Get Menu"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/btn_getClient"
             app:layout_constraintTop_toTopOf="@+id/btn_getClient" />
 
         <Button
@@ -178,6 +175,15 @@
             android:text="Button"
             app:layout_constraintStart_toEndOf="@+id/btn_nextActivity"
             app:layout_constraintTop_toTopOf="@+id/btn_nextActivity" />
+
+        <TextView
+            android:id="@+id/tv_total"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Total:"
+            app:layout_constraintStart_toStartOf="@+id/tv_subTotal"
+            app:layout_constraintTop_toBottomOf="@+id/tv_subTotal" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

@@ -4,7 +4,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
 import android.content.Context;
@@ -15,24 +14,22 @@ import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.mattg.viewmodelexample.fragments.TotalsFragment;
 import com.mattg.viewmodelexample.adapters.MenuItemAdapter;
-import com.mattg.viewmodelexample.database.TicketStatus;
 import com.mattg.viewmodelexample.database.entities.Ticket;
 import com.mattg.viewmodelexample.databinding.ActivityMainBinding;
-import com.mattg.viewmodelexample.dependencies.Utilities;
 import com.mattg.viewmodelexample.models.MenuItem;
 import com.mattg.viewmodelexample.utils.Utils;
 import com.mattg.viewmodelexample.viewModels.MainViewModel;
 import com.mattg.viewmodelexample.viewModels.SecondActivity;
 
 import java.util.ArrayList;
-import java.util.Locale;
 import java.util.Random;
+
+import timber.log.Timber;
 
 
 /**
@@ -162,10 +159,16 @@ public class MainActivity extends AppCompatActivity {
            if(subtotal == null){
                viewModel.setCurrentSubTotal(0.00);
            }
-          binding.tvSubTotal.setText(Utils.formatDoubleToCurrency(Double.parseDouble(String.valueOf(subtotal))));
+          binding.tvSubTotal.setText(Utils.formatDoubleToCurrency(subtotal));
        });
-
+       //observe total, that gets adjusted with tax every time subtotal is updated
+       viewModel.getCurrentTotal().observe(this, total -> {
+           if(total != null){
+               binding.tvTotal.setText(Utils.formatDoubleToCurrency(total));
+           }
+       });
     }
+
     /**
      * Initialize all views here to make on create easy to read/follow.  Click listeners and their
      * functionality are also declared here.

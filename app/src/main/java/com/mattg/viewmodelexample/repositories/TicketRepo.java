@@ -9,7 +9,10 @@ import com.mattg.viewmodelexample.database.ApplicationDatabase;
 import com.mattg.viewmodelexample.database.daos.TicketDao;
 import com.mattg.viewmodelexample.database.entities.Ticket;
 import com.mattg.viewmodelexample.database.entities.TicketDisplay;
+import com.mattg.viewmodelexample.models.MenuItem;
+import com.mattg.viewmodelexample.network.TestApiCaller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,7 +21,7 @@ import java.util.List;
  * may prove helpful in isolating bugs and preventing them from causing cross domain issues.
  * 6-21 [MG]
  */
-public class TicketRepoLocal {
+public class TicketRepo {
 
     private ApplicationDatabase db;
     private TicketDao ticketDao;
@@ -32,7 +35,7 @@ public class TicketRepoLocal {
      * database menus list to local variable that can be observed by a view class or its view model.
      * @param app Application context
      */
-    public TicketRepoLocal(Application app) {
+    public TicketRepo(Application app) {
         db = ApplicationDatabase.getInstance(app);
         ticketDao = db.orderDao();
         //assigning local livedata here allows for any upstream observers to be constantly aware of
@@ -71,4 +74,35 @@ public class TicketRepoLocal {
         return allTicketsByStatusLiveData;
     }
 
+    //------------------------Network Ticket Operations------------------------------------
+    TestApiCaller caller;
+    private Ticket currentTicket;
+
+    /**
+     * Insert a new ticket to the database
+     * @param ticketToAdd {@link Ticket}
+     */
+    public void addTicketToDataBase(Ticket ticketToAdd){
+        caller.insertTicket(ticketToAdd);
+    }
+
+    /**
+     * Puts an updated ticket into the database through retrofit
+     * @param ticket Ticket {@link Ticket} to be updated
+     */
+    private void updateTicketToDataBase(Ticket ticket) {
+        if(ticket != null) {
+            caller.updateTicket(String.valueOf(ticket.getId()), ticket);
+        }
+    }
+
+    /**
+     * Adds an item to the current ticket
+     * @param item
+     */
+    public void addItemToTicket(MenuItem item) {
+        ArrayList<MenuItem> toAdd = new ArrayList<MenuItem>();
+        toAdd.add(item);
+        List<MenuItem> ticketItems =  currentTicket.getItems();
+    }
 }

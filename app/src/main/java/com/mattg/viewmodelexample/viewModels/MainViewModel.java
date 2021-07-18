@@ -9,11 +9,11 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.mattg.viewmodelexample.DemoApplication;
 import com.mattg.viewmodelexample.database.TicketStatus;
 import com.mattg.viewmodelexample.database.entities.Client;
 import com.mattg.viewmodelexample.database.entities.Menu;
 import com.mattg.viewmodelexample.database.entities.Ticket;
-import com.mattg.viewmodelexample.database.entities.TicketDisplay;
 import com.mattg.viewmodelexample.models.MenuItem;
 import com.mattg.viewmodelexample.models.Payment;
 import com.mattg.viewmodelexample.repositories.ClientLocalRepo;
@@ -21,15 +21,9 @@ import com.mattg.viewmodelexample.repositories.ClientRepo;
 import com.mattg.viewmodelexample.repositories.MenuRepo;
 import com.mattg.viewmodelexample.repositories.RoomRepo;
 import com.mattg.viewmodelexample.repositories.TicketDisplayRepo;
-import com.mattg.viewmodelexample.repositories.TicketRepoLocal;
-import com.mattg.viewmodelexample.repositories.TicketRepoNetwork;
-
-import org.jetbrains.annotations.NotNull;
+import com.mattg.viewmodelexample.repositories.TicketRepo;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -38,11 +32,9 @@ public class MainViewModel extends AndroidViewModel {
     private static long idToAddTo = 0;
 
     private MenuRepo menuRepo = new MenuRepo();
-    private ClientRepo clientRepo = new ClientRepo();
-    private TicketRepoNetwork ticketRepoNetwork = new TicketRepoNetwork();
+    private ClientRepo clientRepo = new ClientRepo(getApplication());
     private RoomRepo roomRepo = new RoomRepo(getApplication());
-    private TicketRepoLocal ticketRepoLocal = new TicketRepoLocal(getApplication());
-    private ClientLocalRepo clientLocalRepo = new ClientLocalRepo(getApplication());
+    private TicketRepo ticketRepo = new TicketRepo(getApplication());
     private TicketDisplayRepo ticketDisplayRepo = new TicketDisplayRepo(getApplication());
     private static ArrayList<MenuItem> ticketItems;
 
@@ -236,19 +228,28 @@ public class MainViewModel extends AndroidViewModel {
      * @param sub subtotal amount
      */
     private void adjustTotal(Double sub) {
+        Log.d(TAG, "setting total with " + sub);
         if(tax.getValue() == null){
             tax.postValue(0.0);
         }
-        Double taxAjustment = sub * tax.getValue();
-        if(total.getValue() == null) {
-            total.postValue(0.0);
+
+        Double taxAjusted;
+        if(tax.getValue() != 0.0) {
+            taxAjusted = sub + (sub * tax.getValue());
+        } else {
+            taxAjusted = sub;
         }
-        Double newTotal = taxAjustment + total.getValue();
         if(discountTotal.getValue() == null){
+            Log.d(TAG, "setting total no discounts found");
             discountTotal.postValue(0.0);
+            taxAjusted += 0.0;
+        } else {
+            Log.d(TAG, "setting total discounts found");
+
+            taxAjusted += discountTotal.getValue();
         }
-        newTotal += discountTotal.getValue();
-        total.postValue(newTotal);
+        Log.d(TAG, "setting total with this value: " + taxAjusted);
+        total.postValue(taxAjusted);
     }
 
     /**
@@ -457,6 +458,9 @@ public class MainViewModel extends AndroidViewModel {
            currentTicket.postValue(orderSearchedById.getValue());
            currentSubTotal.postValue(orderSearchedById.getValue().getSubTotal());
            currentItems.postValue((ArrayList<MenuItem>) orderSearchedById.getValue().getItems());
+           if(orderSearchedById.getValue().getTotal() != null){
+               total.postValue(orderSearchedById.getValue().getTotal());
+           }
            if(orderSearchedById.getValue().getDiscounts() != null) {
                discounts.postValue(orderSearchedById.getValue().getDiscounts());
            }
